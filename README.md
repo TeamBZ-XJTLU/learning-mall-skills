@@ -1,11 +1,11 @@
 # LearningMall Skills
 
-Codex skill repository for generating Learning Mall quiz deliverables. The main skill is `learning-mall-helper`, a self-contained workflow for turning source material or Learning Mall Markdown into Moodle XML import files and HTML previews.
+Codex skill repository for generating Learning Mall quiz deliverables. The main skill is `learning-mall-skills`, a self-contained workflow for turning source material or Learning Mall Markdown into Moodle XML import files and HTML previews.
 
 ## Contents
 
 ```text
-learning-mall-helper/
+learning-mall-skills/
 ├── SKILL.md
 ├── agents/openai.yaml
 ├── references/learningmall-format.md
@@ -31,7 +31,7 @@ learning-mall-helper/
 Render a finalized Learning Mall Markdown file:
 
 ```bash
-learning-mall-helper/scripts/convert quiz.learningmall.md \
+learning-mall-skills/scripts/convert quiz.learningmall.md \
   --xml quiz.xml \
   --html quiz.preview.html \
   --pretty-xml
@@ -40,7 +40,7 @@ learning-mall-helper/scripts/convert quiz.learningmall.md \
 For final cloze delivery, keep an editable source Markdown and render from a padded copy:
 
 ```bash
-learning-mall-helper/scripts/convert quiz.learningmall.md \
+learning-mall-skills/scripts/convert quiz.learningmall.md \
   --padded-markdown quiz.padded.learningmall.md \
   --xml quiz.xml \
   --html quiz.preview.html \
@@ -53,20 +53,20 @@ learning-mall-helper/scripts/convert quiz.learningmall.md \
 Extract a DOCX source into a Markdown-like draft:
 
 ```bash
-python learning-mall-helper/scripts/extract_source.py source.docx \
+python learning-mall-skills/scripts/extract_source.py source.docx \
   --output source.extracted.md
 ```
 
 DOCX, Markdown, and text extraction use the Python standard library. PDF extraction requires `pypdf`:
 
 ```bash
-uv run --with pypdf python learning-mall-helper/scripts/extract_source.py source.pdf \
+uv run --with pypdf python learning-mall-skills/scripts/extract_source.py source.pdf \
   --output source.extracted.md
 ```
 
 ## Markdown Format
 
-See [learningmall-format.md](learning-mall-helper/references/learningmall-format.md) for the supported schema.
+See [learningmall-format.md](learning-mall-skills/references/learningmall-format.md) for the supported schema.
 
 Supported question types:
 
@@ -95,11 +95,11 @@ uv run --with pyyaml python ~/.codex/skills/.system/skill-creator/scripts/quick_
 Run a fidelity check after rendering:
 
 ```bash
-python learning-mall-helper/scripts/check_fidelity.py source.extracted.md \
+python learning-mall-skills/scripts/check_fidelity.py source.extracted.md \
   --markdown quiz.learningmall.md \
   --html quiz.preview.html
 ```
 
 ## Skill Entry Point
 
-Codex should load [SKILL.md](learning-mall-helper/SKILL.md) when asked to convert Learning Mall materials, create quiz Markdown, render Moodle XML, build previews, or generate CodeRunner Java questions.
+Codex should load [SKILL.md](learning-mall-skills/SKILL.md) when asked to convert Learning Mall materials, create quiz Markdown, render Moodle XML, build previews, or generate CodeRunner Java questions.

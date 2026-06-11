@@ -248,7 +248,7 @@ public class __tester__ {
 Run the local renderer against the final quiz Markdown:
 
 ```bash
-python learning-mall-helper/scripts/render_outputs.py \
+python learning-mall-skills/scripts/render_outputs.py \
   /path/to/final-quiz.md \
   --xml /tmp/learningmall-check.xml \
   --html /tmp/learningmall-preview.html
@@ -261,7 +261,7 @@ Success means the file is structurally acceptable to the repository parser and p
 After rendering XML and preview HTML, compare the source against the generated artifacts:
 
 ```bash
-python learning-mall-helper/scripts/check_fidelity.py \
+python learning-mall-skills/scripts/check_fidelity.py \
   /path/to/original-source-or-extracted-draft.md \
   --markdown /path/to/final-quiz.md \
   --html /path/to/preview.html

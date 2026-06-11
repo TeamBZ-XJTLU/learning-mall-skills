@@ -1,9 +1,9 @@
 ---
-name: learning-mall-helper
+name: learning-mall-skills
 description: Convert source material or finalized Learning Mall Markdown into Moodle XML import files and HTML preview files for Learning Mall. Use when Codex needs to ingest DOCX, PDF, Markdown, or text quiz sources, normalize them into the local Learning Mall Markdown schema, exclude requested sections, pad cloze blanks, render XML/HTML, or run fidelity checks.
 ---
 
-# LearningMallHelper
+# LearningMallSkills
 
 Use this skill as the source-to-deliverables workflow for Learning Mall quiz work.
 

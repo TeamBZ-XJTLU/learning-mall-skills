@@ -1,4 +1,4 @@
 interface:
-  display_name: "LearningMallHelper"
+  display_name: "LearningMallSkills"
   short_description: "LearningMall source to XML workflow"
-  default_prompt: "Use $learning-mall-helper to convert source material into Learning Mall Markdown, Moodle XML, and preview HTML."
+  default_prompt: "Use $learning-mall-skills to convert source material into Learning Mall Markdown, Moodle XML, and preview HTML."
