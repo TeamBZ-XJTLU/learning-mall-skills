@@ -1,0 +1,147 @@
+#!/usr/bin/env python3
+"""Convert Learning Mall quiz Markdown using this skill's local render helpers."""
+
+from __future__ import annotations
+
+import argparse
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+
+def resolve_path(path: Path) -> Path:
+    path = path.expanduser()
+    if not path.is_absolute():
+        path = Path.cwd() / path
+    return path
+
+
+def default_xml_path(input_path: Path) -> Path:
+    return input_path.with_suffix(".xml")
+
+
+def default_html_path(input_path: Path) -> Path:
+    if input_path.suffix:
+        return input_path.with_name(f"{input_path.stem}.preview.html")
+    return input_path.with_name(f"{input_path.name}.preview.html")
+
+
+def run_command(command: list[str], cwd: Path | None = None) -> int:
+    completed = subprocess.run(command, check=False, cwd=str(cwd) if cwd else None)
+    return completed.returncode
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description=(
+            "Convert finalized Learning Mall quiz Markdown into Moodle XML and "
+            "HTML preview files."
+        )
+    )
+    parser.add_argument("input", type=Path, help="Final Learning Mall quiz Markdown file.")
+    parser.add_argument("--xml", type=Path, help="Destination Moodle XML file.")
+    parser.add_argument("--html", type=Path, help="Destination HTML preview file.")
+    parser.add_argument(
+        "--pretty-xml",
+        action="store_true",
+        help="Pretty-print the generated Moodle XML.",
+    )
+    parser.add_argument(
+        "--pad-cloze",
+        action="store_true",
+        help="Pad cloze placeholders before rendering to avoid answer-length hints.",
+    )
+    parser.add_argument(
+        "--in-place",
+        action="store_true",
+        help="With --pad-cloze, rewrite the input Markdown before rendering.",
+    )
+    parser.add_argument(
+        "--padded-markdown",
+        type=Path,
+        help="With --pad-cloze, write padded Markdown here and render that file.",
+    )
+    return parser.parse_args()
+
+
+def main() -> int:
+    args = parse_args()
+    input_path = resolve_path(args.input)
+    if not input_path.exists():
+        print(f"Input not found: {input_path}", file=sys.stderr)
+        return 1
+    if args.in_place and not args.pad_cloze:
+        print("--in-place requires --pad-cloze.", file=sys.stderr)
+        return 1
+    if args.padded_markdown and not args.pad_cloze:
+        print("--padded-markdown requires --pad-cloze.", file=sys.stderr)
+        return 1
+    if args.in_place and args.padded_markdown:
+        print("Use either --in-place or --padded-markdown, not both.", file=sys.stderr)
+        return 1
+
+    script_dir = Path(__file__).resolve().parent
+    render_script = script_dir / "render_outputs.py"
+    pad_script = script_dir / "pad_cloze_answers.py"
+    if not render_script.exists():
+        print(f"Renderer not found: {render_script}", file=sys.stderr)
+        return 1
+    if args.pad_cloze and not pad_script.exists():
+        print(f"Cloze padding script not found: {pad_script}", file=sys.stderr)
+        return 1
+
+    xml_path = resolve_path(args.xml) if args.xml else default_xml_path(input_path)
+    html_path = resolve_path(args.html) if args.html else default_html_path(input_path)
+    python = Path(sys.executable)
+    render_input = input_path
+
+    with tempfile.TemporaryDirectory(prefix="learningmall-convert-") as tmpdir:
+        if args.pad_cloze:
+            if args.in_place:
+                pad_command = [str(python), str(pad_script), str(input_path), "--in-place"]
+                pad_status = run_command(pad_command)
+                if pad_status != 0:
+                    return pad_status
+            else:
+                if args.padded_markdown:
+                    padded_path = resolve_path(args.padded_markdown)
+                else:
+                    padded_path = Path(tmpdir) / input_path.name
+                pad_command = [
+                    str(python),
+                    str(pad_script),
+                    str(input_path),
+                    "--output",
+                    str(padded_path),
+                ]
+                pad_status = run_command(pad_command)
+                if pad_status != 0:
+                    return pad_status
+                render_input = padded_path
+
+        render_command = [
+            str(python),
+            str(render_script),
+            str(render_input),
+            "--xml",
+            str(xml_path),
+            "--html",
+            str(html_path),
+            "--base-dir",
+            str(input_path.parent),
+        ]
+        if args.pretty_xml:
+            render_command.append("--pretty-xml")
+
+        render_status = run_command(render_command, cwd=input_path.parent)
+        if render_status != 0:
+            return render_status
+
+    print(f"Converted: {input_path}")
+    print(f"XML: {xml_path}")
+    print(f"HTML: {html_path}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
