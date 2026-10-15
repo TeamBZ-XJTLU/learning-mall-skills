@@ -22,16 +22,19 @@ learning-mall-skills/
 - Extract source text from `.docx`, `.md`, `.markdown`, `.txt`, and optionally `.pdf`.
 - Author Learning Mall Markdown for multiple-choice, cloze, description, and CodeRunner Java questions.
 - Convert Learning Mall Markdown into Moodle XML plus HTML preview.
+- Confirm question-bank categories per section and produce separate deliverables for documents with multiple question sections.
 - Pad cloze answers with zero-score decoys so blank width does not reveal answer length.
 - Run a conservative fidelity check against source text.
 - Generate CodeRunner questions with `coderunnertype` set to `java_program`.
 
 ## Quick Start
 
-Render a finalized Learning Mall Markdown file:
+Run the commands below from the repository root. When using Codex, provide the source document and ask to convert it; Codex inspects the sections and asks for any missing category names before generating XML.
+
+Render a finalized Learning Mall Markdown file with confirmed `Category` metadata:
 
 ```bash
-learning-mall-skills/scripts/convert quiz.learningmall.md \
+./scripts/convert quiz.learningmall.md \
   --xml quiz.xml \
   --html quiz.preview.html \
   --pretty-xml
@@ -40,7 +43,7 @@ learning-mall-skills/scripts/convert quiz.learningmall.md \
 For final cloze delivery, keep an editable source Markdown and render from a padded copy:
 
 ```bash
-learning-mall-skills/scripts/convert quiz.learningmall.md \
+./scripts/convert quiz.learningmall.md \
   --padded-markdown quiz.padded.learningmall.md \
   --xml quiz.xml \
   --html quiz.preview.html \
@@ -48,25 +51,39 @@ learning-mall-skills/scripts/convert quiz.learningmall.md \
   --pad-cloze
 ```
 
+## Categories And Sections
+
+For a single question section, Codex asks for its Learning Mall question-bank category. For a document with multiple sections, such as MCQs and fill-in-the-blank questions, Codex lists the sections and asks for a category for each in one message. Categories already explicitly assigned to sections are reused; you may also explicitly assign the same category to several sections or the whole document.
+
+Source section boundaries are preserved, including sections with the same question type. When question types are mixed without section headings, Codex groups them by type for the category request. Answer keys and sections you ask to omit are not included in that request.
+
+A category name such as `Mock/HardLoops` becomes:
+
+```markdown
+Category: $course$/top/Mock/HardLoops
+```
+
+A full category path you supply is preserved. Each section gets its own editable Markdown, Moodle XML, and HTML preview, plus padded Markdown for cloze delivery. The renderer supports one top-of-file category per Markdown file, so convert each section separately. The command-line converter reads that metadata directly; the category prompts are part of the Codex skill workflow.
+
 ## Source Extraction
 
 Extract a DOCX source into a Markdown-like draft:
 
 ```bash
-python learning-mall-skills/scripts/extract_source.py source.docx \
+python scripts/extract_source.py source.docx \
   --output source.extracted.md
 ```
 
 DOCX, Markdown, and text extraction use the Python standard library. PDF extraction requires `pypdf`:
 
 ```bash
-uv run --with pypdf python learning-mall-skills/scripts/extract_source.py source.pdf \
+uv run --with pypdf python scripts/extract_source.py source.pdf \
   --output source.extracted.md
 ```
 
 ## Markdown Format
 
-See [learningmall-format.md](learning-mall-skills/references/learningmall-format.md) for the supported schema.
+See [learningmall-format.md](references/learningmall-format.md) for the supported schema.
 
 Supported question types:
 
@@ -89,17 +106,17 @@ Validate the skill folder:
 
 ```bash
 uv run --with pyyaml python ~/.codex/skills/.system/skill-creator/scripts/quick_validate.py \
-  [skill folder path]
+  .
 ```
 
 Run a fidelity check after rendering:
 
 ```bash
-python learning-mall-skills/scripts/check_fidelity.py source.extracted.md \
+python scripts/check_fidelity.py source.extracted.md \
   --markdown quiz.learningmall.md \
   --html quiz.preview.html
 ```
 
 ## Skill Entry Point
 
-Codex should load [SKILL.md](learning-mall-skills/SKILL.md) when asked to convert Learning Mall materials, create quiz Markdown, render Moodle XML, build previews, or generate CodeRunner Java questions.
+Codex should load [SKILL.md](SKILL.md) when asked to convert Learning Mall materials, create quiz Markdown, render Moodle XML, build previews, or generate CodeRunner Java questions.
