@@ -9,19 +9,25 @@ Use this skill as the source-to-deliverables workflow for Learning Mall quiz wor
 
 ## Workflow
 
-1. Identify the source type.
+1. Confirm the category before converting to Learning Mall-compatible Moodle XML.
+   - First ask: "What category name should I use for the Learning Mall question bank?"
+   - If the user already explicitly supplied the category for this conversion, use it without asking again. Otherwise, wait for their answer before generating XML, even if the source Markdown already contains a category.
+   - Set the canonical Markdown's `Category` metadata to the user's choice. For a category name, use `Category: $course$/top/<category-name>`; preserve a full category path if the user supplies one.
+   - Do not invent a category, silently reuse an existing one, or omit it from the XML.
+
+2. Identify the source type.
    - For `.md`, `.markdown`, or `.txt`, read the file directly unless formatting is messy.
    - For `.docx` or `.pdf`, run `scripts/extract_source.py` to produce an editable Markdown-like draft.
    - For legacy `.doc`, convert it to `.docx` or `.pdf` first.
 
-2. Extract source text when needed.
+3. Extract source text when needed.
    - Run `python scripts/extract_source.py <input-file> --output <source-draft.md>`.
    - DOCX, Markdown, and text extraction use the Python standard library.
    - PDF extraction requires `pypdf`; if unavailable, run through `uv`, for example:
      `uv run --with pypdf python scripts/extract_source.py <input-file.pdf> --output <source-draft.md>`.
    - Treat extracted text as source material, not final quiz Markdown.
 
-3. Rewrite the draft into Learning Mall Markdown.
+4. Rewrite the draft into Learning Mall Markdown.
    - Read `references/learningmall-format.md` before authoring final output.
    - Keep only supported metadata: `Category`, `Description`, `CodeMode`, `ImageMaxWidth`.
    - Start every question with `## <title>`.
@@ -34,16 +40,17 @@ Use this skill as the source-to-deliverables workflow for Learning Mall quiz wor
    - Preserve code blocks, source wording, and local image references whenever they matter.
    - Exclude sections the user explicitly asks to omit.
 
-4. Save the editable Learning Mall Markdown as the canonical artifact.
+5. Save the editable Learning Mall Markdown as the canonical artifact.
    - Keep this file even when the user mainly wants XML, because it is the source of truth for later edits.
 
-5. Render final deliverables with this skill's command.
+6. Render final deliverables with this skill's command.
+   - Before rendering XML, verify that `Category` matches the category confirmed by the user.
    - Run `scripts/convert <final-markdown> --xml <quiz.xml> --html <preview.html> --pad-cloze --padded-markdown <padded.md>`.
    - The XML is the Learning Mall import artifact.
    - The HTML is the preview artifact.
    - The padded Markdown is a render-source artifact; keep the unpadded Markdown as the editable canonical source.
 
-6. Check fidelity and iterate when the source is not trivial.
+7. Check fidelity and iterate when the source is not trivial.
    - Run `python scripts/check_fidelity.py <source-or-draft> --markdown <final-markdown> --html <preview.html>`.
    - Review reported missing lines manually; the checker is conservative and can flag harmless formatting changes.
    - Patch the Learning Mall Markdown, rerender, and recheck until the source content needed for the requested scope is represented.
